@@ -1,309 +1,81 @@
-# dark-gptsampling temperature
-temperature
-    [#OpenAI API]
-    [API setting]
-    [GPT-3 prompt setting]
-    [GPT hyperparameter]
-    [#GPT]
+import g4f.cookies
 
-    0.9 recommended value.
-    min value: 0
-    max value: 1
+from g4f.client import Client
 
-    0: deterministic, (not random)
-    1: creative, max random
+import base64
 
-    https://towardsdatascience.com/how-to-sample-from-language-models-682bceb97277
+# Dictionary mapping model names to pr
 
-    openai api engines.generate -h | vs +/"-t TEMPERATURE"
+ovider names
 
-    Controls token randomness.
+model_provider_mapping = {
 
-    Higher values means the model will take
-    more risks.
+'gpt-3.5-turbo': 'DDG',
 
-    Try 0.9 for more creative applications,
-    and 0 (argmax sampling) for ones with a
-    well-defined answer.
+'gpt-40': None,
 
-    A lower setting results in less random
-    completions a higher setting is less
-    deterministic and repetitive.
+'mixtral_8x7b': 'HuggingFace',
 
-    Lower settings are generally better for
-    classification tasks and higher settings
-    for more open-ended responses.
+'blackbox': 'Blackbox',
 
-    Float value controlling randomness in
-    boltzmann distribution.
+'meta': 'Meta Al',
 
-    Lower temperature results in less random
-    completions.
+'llama3_70b_instruct': 'Meta Al',
 
-    As the temperature approaches zero, the
-    model will become deterministic and
-    repetitive.
+# Add more models and providers as n eeded
 
-    Higher temperature results in more random
-    completions.
+}
 
-    How much creative liberty the model has.
+# Dictionary mapping display model nam
 
-    The lower the value, the less creative
-    liberty it has.
+es to internal model names
 
-    Controls the randomness of the completion.
+display_model_mapping =
 
-    Setting it to a high value ensures that a
-    completely different response is returned
-    even if a prompt is reused.
+{
 
-    If an idempotent response is desired
-    instead, set this to zero.
+'gpt 3.5 turbo': 'gpt-3.5-turbo',
 
-nucleus sampling
-top p sampling
-    Compute the cumulative distribution and
-    cut off as soon as the CDF exceeds P.
+'gpt 40': 'gpt-40',
 
-    Example:
-        In a broad distribution, it may take
-        the top 100 tokens to exceed top_p =
-        .9.
+'llama 3': 'llama3_70b_instruct',
+Mixtral 70b': 'mixtral_8x7b',
 
-        In a narrow distribution, we may
-        already exceed top_p = .9.
+'BlackBox': 'blackbox',
 
-    Still avoid sampling egregiously wrong
-    tokens, but preserve variety when the
-    highest scoring tokens have low
-    confidence.
+'Meta Al': 'meta',
 
-    A method of determining which tokens to
-    use that looks at the combined probability
-    of groups of tokens.
+def get_provider(model: str) -> str:
 
-    See "Top P".
+"""Get provider name based on the mo del."""
 
-    v +/"Nucleus sampling" "$MYGIT/mullikine/gpt-2/src/sample.py"
+return model_provider_mapping.get(m odel, ")
 
-    https://arxiv.org/pdf/1904.09751.pdf
+def get_model(display_model: str) -> str:
 
-Top P
-top-p
-    [#OpenAI API]
-    [API setting]
-    [GPT-3 prompt setting]
-    [GPT hyperparameter]
-    [#GPT]
+"""Get internal model name based on he display model name.""
 
-    Floating point value.
+return display_model_mapping.get(dis play_model, ")
 
-    Max value: 1
-    Recommended value: 1
-    Min value: 0
+def get_bot_response(prompt, internal_m odel, provider_name):
 
-    https://towardsdatascience.com/how-to-sample-from-language-models-682bceb97277
+client = Client()
 
-    Diversity via nucleus sampling.
+response = client.chat.completions.
 
-    Cuts off tokens below a certain
-    probability threshold.
+create(
 
-    We generally recommend keeping it set to
-    around 1.
+model=internal_model,
 
-    Similar to temperature, this is an API
-    setting that controls the diversity of
-    tokens considered using nucleus sampling.
+messages=[{"role": "user", "conte
+nt": prompt}],
 
-    A lower setting results in less random
-    completions a higher setting is less
-    deterministic and repetitive.
+provider=provider_name,
 
-    Lower settings are generally better for
-    classification tasks and higher settings
-    for more open-ended responses.
+cookies=g4f.cookies.get_cookies
 
-    Controls diversity via nucleus sampling:
-    1.5 means half of all likelihood-weighted
-    options are considered.
+('bing')
 
-    See "nucleus sampling".
+return response.choices[0].messag
 
-fine-tune checkpoint
-    ewwlinks +/"fine-tune checkpoint" "https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english"
-
-GPT-n
-    https://research.aimultiple.com/gpt/
-
-    The umbrella term for GPT, GPT-2, GPT-3,
-    etc.
-
-SST-2
-    [dataset]
-
-    Distilbert is traned on this for sentiment
-    analysis.
-
-    A binary classification benchmark for
-    sentiment analysis.
-
-    https://paperswithcode.com/sota/sentiment-analysis-on-sst-2-binary
-
-    eww:file:///$DUMP/programs/httrack/mirrors/https-huggingface-co-transformers-/huggingface.co/transformers/quicktour.html#getting-started-on-a-task-with-a-pipeline
-
-prompt design
-prompt engineering
-priming
-    As smart as GPT-3 is, it still doesn't
-    excel at most tasks out of the box.
-
-    It benefits greatly from seeing a few
-    examples, a process we like to refer to as
-    "priming".
-
-    You have to pay attention to what model
-    you’re creating it for.
-
-    Generally, Davinci can understand any
-    prompt a faster model can use, but the
-    reverse is definitely not true.
-
-davinci
-    [#model of the GPT-3 family]
-
-    https://andrewmayneblog.wordpress.com/2020/10/25/overclocking-openais-gpt-3/
-
-    Misspell “Batman” as “Batmn”, Davinci had
-    your back.
-
-    Give it one wrong example out of ten and
-    Davinci can probably figure out what you
-    meant (although at a performance cost you
-    might notice later down the line.)
-
-ada
-    [#model of the GPT-3 family]
-
-    Ada, the fastest, costs 1/75 the price per
-    API call as Davinci.
-
-    - Faster responses
-    - Costs less
-
-babbage
-    [#model of the GPT-3 family]
-
-curie
-    [#model of the GPT-3 family]
-
-    Curie isn’t as intuitive as Davinci but is
-    much faster and costs 1/10 the price of
-    Davinci to use.
-
-max_tokens
-    Integer, the number of tokens to be
-    generated after prompt.
-
-GTP-3 Instruct
-davinci-instruct
-    https://beta.openai.com/docs/engines/the-instruct-series-beta
-
-    GPT-3 Instruct (in particular,
-    davinci-instruct ) lets you give specific
-    instructions, like "Only respond in
-    correct SQL syntax", that guides GPT-3's
-    responses. If you're interested in trying
-    it out, you can sign up for the waitlist
-    for the GPT-3 API here . 
-
-    https://beta.openai.com/playground?model=davinci-instruct-beta
-
-Transformer
-    Can be trained on stupendously large
-    datasets, such as the entire internet.
-
-    Attention-based: Can learn and generate
-    long sequences of data.
-
-    GPT-3
-    Can look up to several pages backwards to
-    remain coherent.
-
-Tokens 
-    Tokens can be roughly thought of as words.
-
-    Before the text input is passed on, it is
-    tokenized where the sentences are split
-    into words.
-
-    You can read more about it:
-        https://towardsdatascience.com/byte-pair-encoding-the-dark-horse-of-modern-nlp-eb36c7df4f10
-
-epoch 
-    An epoch is the number of times the model
-    passes over your data.
-
-    So if num-epochs is set to 5, the model in
-    total will go 5 times over each training
-    example. 
-
-    Different number of epochs will give
-    different results.
-
-    For example if you have little data
-    (100,000 sentences) and train it for 100
-    epochs, you will lose almost everything
-    the pre-trained model has learned and it
-    will memorize your input instead of
-    learning from it.
-
-    This is called overfitting.
-
-    For the GPT-3 family a 1-5 epochs are
-    enough for most use cases unless you have
-    a lot of training data.
-
-    If possible, playing around with the
-    number of epochs.
-
-Batch Size
-    Since almost all datasets are too large to
-    be fit in a single go, it is split into
-    batches.
-
-    Batch size is how big each part is.
-
-    Let's assume that our dataset has 16384
-    tokens.
-
-    We set the number of tokens to be 2048
-    (using ```--max-tokens```).
-
-    Now, if we select a batch size of 1 (2048
-    tokens in one go), a single epoch will
-    have 8 iterations.
-
-    If we select a batch size of 2 we will
-    have 4 iterations because each batch will
-    then have 4096 tokens.
-
-    Batch size will determine how fast your
-    training is completed.
-
-    You can increase your batch size to
-    increase speed, but there is a limit to
-    how big a single batch can be (depending
-    on the engine).
-
-Learning Rate
-    Learning rate determines how fast the
-    model changes/adapts.
-
-    If you have a small dataset, it is better
-    to try out smaller learning rates using
-    the ```-s``` argument.
-
-    For example, to decrease the learning rate
-    by 10x , use ```--s 0.1```
+e.content
